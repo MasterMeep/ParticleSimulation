@@ -74,8 +74,8 @@ class Point:
         """
         returns if the point is within the radius of another point
         @param point: the point to check if it is within the radius of
-        @param radius1: the radius of the coorosponding particle for this point
-        @param radius2: the radius of the coorosponding particle for the point to check
+        @param radius1: the radius of the corosponding particle for this point
+        @param radius2: the radius of the corosponding particle for the point to check
         """
         
         """

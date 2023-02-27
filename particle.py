@@ -11,11 +11,11 @@ class Particle:
     @param charge: the charge of the particle
     @param gravity_effected: if the particle is effected by gravity
     """
-    def __init__(self, x_coordinate: int, y_coordinate: int, vector=Vector(0,0), radius=1, charge=0):
-        self.coordinate = Point(x_coordinate, y_coordinate, vector)
-        self.mass = radius
-        self.charge = charge
+    def __init__(self, x_coordinate: int, y_coordinate: int, vector_function, radius=1, charge=0, color='blue'):
+        self.coordinate = Point(x_coordinate, y_coordinate, vector_function)
         self.radius = radius
+        self.charge = charge
+        self.color = color
 
     def __repr__(self):
         return f'Particle\n\tPos: {self.get_x(), self.get_y()}'
@@ -28,7 +28,7 @@ class Particle:
         @param particle: the particle to copy
         @return a copy of the particle
         """
-        return Particle(particle.get_x(), particle.get_y(), particle.get_coordinate().vector_function, particle.mass, particle.charge)
+        return cls(particle.get_x(), particle.get_y(), particle.get_vector_function(), particle.get_radius(), particle.get_charge(), particle.get_color())
 
     def get_new_pos(self, steps=0) -> Point:
         """returns the new position of the particle"""
@@ -45,7 +45,7 @@ class Particle:
         """
         running = True
         while running:
-            next_vector = self.get_vector_function()
+            next_vector = self.get_vector_function()()
             next_position = self.get_coordinate().position_after_vector(self.get_coordinate(), next_vector)
             for particle in system.get_particles():
                 if not next_position.intersects(particle.get_coordinate(), self.get_radius(), particle.get_radius()):
@@ -67,8 +67,16 @@ class Particle:
 
     def get_vector_function(self) -> Vector:
         """returns the vector of the particle"""
-        return self.coordinate.vector_function()
+        return self.get_coordinate().get_vector_function()
     
     def get_radius(self) -> int:
         """returns the size of the particle"""
         return self.radius
+    
+    def get_charge(self) -> int:
+        """returns the charge of the particle"""
+        return self.charge
+    
+    def get_color(self) -> str:
+        """returns the color of the particle"""
+        return self.color
