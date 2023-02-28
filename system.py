@@ -6,7 +6,8 @@ from matplotlib.animation import FuncAnimation
 import time
 from alive_progress import alive_bar
 import math
-
+import seaborn as sns
+from contextlib import nullcontext
 
 
 class System:
@@ -52,26 +53,26 @@ class System:
                             break
                 
                 bar()
+        print(' ')
                 
 
-    def step(self, steps=1):
+    def step(self, steps=1, show=False):
         """
         Steps the system by the amount of steps given
         @param steps: the amount of steps to step the system by
         """
-        for step in range(steps):
-            for particle in self.particles:
-                particle.step(self.width, self.height, self)
-            """records steps. keep off unless debugging"""
-            #if(step%10 == 0):
-            #    print("Step: " + str(step) + " of " + str(steps) + " completed.")
-            
+        with alive_bar(steps, dual_line=True, title='Stepping') if show else nullcontext() as bar :
+        
+            for step in range(steps):
+                for particle in self.particles:
+                    particle.step(self.width, self.height, self)
+                if(show):
+                    bar()
+
         self.current_step += steps
 
-    def show_state(self, ax=None, plot=True):
+    def show_state(self, axs, plot=True, show_density=False):
         """display state of system with matplotlib"""
-        if ax == None:
-            fig, ax = plt.subplots()
         x_coordinates = []
         y_coordinates = []
         sizes = []
@@ -86,25 +87,46 @@ class System:
             y_coordinates.append(particle.get_y())
             sizes.append(math.pi*(particle.get_radius()**2))
             colors.append(particle.get_color())
-        ax.set_title(self.current_step)
-        ax.clear()
-        ax.scatter(x_coordinates, y_coordinates, s=sizes, c=colors)
-        ax.set_xlim([-self.width//2, self.width//2])
-        ax.set_ylim([-self.height//2, self.height//2])
-        
+        if show_density:
+            axs[0].set_title(self.current_step)
+            axs[0].clear()
+            axs[1].clear()
+            axs[0].scatter(x_coordinates, y_coordinates, s=sizes, c=colors)
+            
+            axs[0].set_xlim([-self.width//2, self.width//2])
+            axs[1].set_xlim([-self.width//2, self.width//2])
+            
+            axs[0].set_ylim([-self.height//2, self.height//2])
+            axs[1].set_ylim([-self.height//2, self.height//2])
+            
+            
+            sns.kdeplot(x_coordinates, y_coordinates, ax=axs[1], shade_lowest=False, cmap="Blues")
+        else:
+            axs.set_title(self.current_step)
+            axs.clear()
+            axs.scatter(x_coordinates, y_coordinates, s=sizes, c=colors)
+            axs.set_xlim([-self.width//2, self.width//2])
+            axs.set_ylim([-self.height//2, self.height//2])
+            
         if plot:
             plt.show()
         
 
         
-    def animate_plots(self):
-        fig, ax = plt.subplots()
+    def animate_plots(self, show_density=False):
+        if show_density:
+            fig, axs = plt.subplots(2,1)
+        else:
+            fig, axs = plt.subplots()
         
         def animate_system(frame):
             self.step(self.step_size)
             
-            self.show_state(ax, plot = False)
-            ax.set_title("Step: " + str(self.current_step))
+            self.show_state(axs, plot = False, show_density=show_density)
+            if show_density:
+                axs[0].set_title("Step: " + str(self.current_step))
+            else:
+                axs.set_title("Step: " + str(self.current_step))
         animation = FuncAnimation(fig, animate_system, interval=100)
         plt.show()
 
@@ -120,6 +142,13 @@ class System:
             
         return coordinates
     
+    def get_particle_coordinates_in_2d_list(self) -> list:
+        particle_coordinates_2d = []
+        for particle in self.get_particles():
+            particle_coordinates_2d.append([*particle.get_coordinate().get_xy()])
+            
+        return particle_coordinates_2d
+        
     def get_particles(self):
         return self.particles
     
