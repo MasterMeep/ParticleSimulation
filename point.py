@@ -45,7 +45,7 @@ class Point:
         """returns the x and y coordinate of the point"""
         return self.x_coordinate, self.y_coordinate
 
-    def set_X(self, new_x_coordinate: int):
+    def set_x(self, new_x_coordinate: int):
         """
         updates the x coordinate of the point
         @param x: the x coordinate to update to

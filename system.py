@@ -71,8 +71,12 @@ class System:
 
         self.current_step += steps
 
-    def show_state(self, axs, plot=True, show_density=False):
+    def show_state(self, axs=None, plot=True, show_density=False, animation=False):
         """display state of system with matplotlib"""
+        
+        if not animation:
+            fig, axs = plt.subplots()
+        
         x_coordinates = []
         y_coordinates = []
         sizes = []
@@ -122,7 +126,7 @@ class System:
         def animate_system(frame):
             self.step(self.step_size)
             
-            self.show_state(axs, plot = False, show_density=show_density)
+            self.show_state(axs, plot = False, show_density=show_density, animation=True)
             if show_density:
                 axs[0].set_title("Step: " + str(self.current_step))
             else:

@@ -62,6 +62,17 @@ class Particle:
         """returns the y coordinate of the particle"""
         return self.coordinate.get_y()
     
+    def set_x(self, x: int):
+        """sets the x coordinate of the particle"""
+        self.get_coordinate().set_x(x)
+        
+    def set_y(self, y: int):
+        """sets the y coordinate of the particle"""
+        self.get_coordinate().set_y(y)
+        
+    def set_xy(self, newpoint: Point):
+        self.get_coordinate().set_xy(newpoint)
+    
     def get_coordinate(self) -> Point:
         return self.coordinate
 
