@@ -13,11 +13,11 @@ def generate_square(side_length, particle, system):
                 system.add_particle(particle)
                 bar()
                 
-def generate_nested_squares(side_length_inner, side_length_outer, particle_inner, particle_outer, system):
+def generate_nested_squares(side_length_inner, side_length_outer, particle_inner, particle_outer, system, density=1):
     with alive_bar((side_length_inner+side_length_outer)**2, title='Generating Square') as bar:
-        for y in range(-(side_length_inner+side_length_outer)//2, (side_length_inner+side_length_outer)//2):
-            for x in range(-(side_length_inner+side_length_outer)//2, (side_length_inner+side_length_outer)//2):
-                if -side_length_inner//2 <= x <= side_length_inner//2 and -side_length_inner//2 <= y <= side_length_inner//2:
+        for y in range(-(side_length_inner+side_length_outer)//2, (side_length_inner+side_length_outer)//2, density):
+            for x in range(-(side_length_inner+side_length_outer)//2, (side_length_inner+side_length_outer)//2, density):
+                if 0 <= x:
                     particle = Particle.copy_particle(particle_inner)
                 else:
                     particle = Particle.copy_particle(particle_outer)
