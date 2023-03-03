@@ -32,8 +32,9 @@ class System:
         @param particle: the particle to add to the system
         """
         self.particles.append(particle)
-        
-    def add_multiple_duplicate_particles(self, particle, amount):
+
+    #TODO: make this function more efficient, its horrifically inefficient
+    def add_multiple_duplicate_particles(self, particle, amount, show=False):
         """
         Adds multiple particles to the system
         @param particle: the particle to add to the system
@@ -41,7 +42,7 @@ class System:
         """
         for _ in range(amount):
             self.add_particle(Particle.copy_particle(particle))
-        with alive_bar(amount, dual_line=True, title='Initializing Particles') as bar:
+        with alive_bar(amount, dual_line=True, title='Initializing Particles') if show else nullcontext() as bar:
             for iterated_particle in self.get_particles():
                 running = True
                 while running:    
@@ -52,7 +53,8 @@ class System:
                             running = False
                             break
                 
-                bar()
+                if (show):
+                    bar()
         print(' ')
                 
 
@@ -61,16 +63,18 @@ class System:
         Steps the system by the amount of steps given
         @param steps: the amount of steps to step the system by
         """
-        with alive_bar(steps, dual_line=True, title='Stepping') if show else nullcontext() as bar :
-        
+        with alive_bar(steps, dual_line=True, title='Stepping') if show else nullcontext() as bar:
+            
             for step in range(steps):
                 for particle in self.particles:
                     particle.step(self.width, self.height, self)
+                
                 if(show):
                     bar()
+            
 
         self.current_step += steps
-
+    #TODO: split function into basic plt plots instead of this horrible mess of 2 if statements
     def show_state(self, axs=None, plot=True, show_density=False, animation=False):
         """display state of system with matplotlib"""
         
@@ -146,6 +150,7 @@ class System:
             
         return coordinates
     
+    #TODO: make this is an ordered list
     def get_particle_coordinates_in_2d_list(self) -> list:
         particle_coordinates_2d = []
         for particle in self.get_particles():

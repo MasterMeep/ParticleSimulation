@@ -1,5 +1,6 @@
 from point import Point
 from vector import Vector
+import time
 
 class Particle:
     """

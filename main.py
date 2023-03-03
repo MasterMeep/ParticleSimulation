@@ -5,6 +5,8 @@ from system import System
 import time
 import random
 from template_generator import generate_square, generate_nested_squares
+import matplotlib.pyplot as plt
+from alive_progress import alive_bar
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -25,5 +27,3 @@ generate_nested_squares(50, 25, test_particle1, test_particle2, test_system, den
 test_system.show_state()
 
 test_system.animate_plots()
-
-#test_system.step(10000, show=True)
