@@ -4,26 +4,25 @@ from point import Point
 from system import System
 import time
 import random
-from template_generator import generate_square, generate_nested_squares
-import matplotlib.pyplot as plt
-from alive_progress import alive_bar
+from template_generator import generate_square, generate_nested_squares, generate_particle_density
 
 import warnings
 warnings.filterwarnings("ignore")
 
 
-vector_randomization = lambda: Vector(2*random.random()-1, 2*random.random()-1)
-test_particle1 = Particle(x_coordinate = 0, y_coordinate = 0, vector_function = vector_randomization, radius = 1)
-test_particle2 = Particle(x_coordinate = 0, y_coordinate = 0, vector_function = vector_randomization, radius = 1, color='r')
+vector_randomization = lambda: Vector(6*random.random()-3, 6*random.random()-3)
+test_particle1 = Particle(vector_function = vector_randomization, radius = 1)
+test_particle2 = Particle(vector_function = vector_randomization, radius = 1, color='r')
 
 
 
 
 
-test_system = System(width = 100, height = 100, gravity = False, step_size = 100)
+test_system = System(width = 100, height = 100, gravity = False, step_size = 1)
 
-generate_nested_squares(50, 25, test_particle1, test_particle2, test_system, density=5)
+generate_particle_density(test_particle1, 0.4, test_system)
 
-test_system.show_state()
-
-test_system.animate_plots()
+#test_system.add_multiple_duplicate_particles(test_particle1, 20)
+test_system.step(steps=1000, show=True)
+"""test_system.show_state(show_density=True)
+test_system.animate_plots(show_density=True, show_step_states=True, show_individually=True)"""

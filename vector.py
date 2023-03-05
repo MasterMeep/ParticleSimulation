@@ -16,7 +16,7 @@ class Vector:
         """returns the y velocity of the vector"""
         return self.y_velocity
 
-    def set_vector(self, new_x_velocity: int, new_y_velocity: int):
+    def set_vector(self, new_x_velocity: int, new_y_velocity: int, new_z_velocity: int):
         """
         updates the vector
         @param x_velocity: the x velocity to update to
@@ -24,3 +24,4 @@ class Vector:
         """
         self.x_velocity = new_x_velocity
         self.y_velocity = new_y_velocity
+        self.z_velocity = new_z_velocity

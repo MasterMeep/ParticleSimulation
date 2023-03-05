@@ -12,7 +12,7 @@ class Particle:
     @param charge: the charge of the particle
     @param gravity_effected: if the particle is effected by gravity
     """
-    def __init__(self, x_coordinate: int, y_coordinate: int, vector_function, radius=1, charge=0, color='blue'):
+    def __init__(self, vector_function, x_coordinate = 0, y_coordinate = 0, radius=1, charge=0, color='blue'):
         self.coordinate = Point(x_coordinate, y_coordinate, vector_function)
         self.radius = radius
         self.charge = charge
@@ -23,13 +23,13 @@ class Particle:
 
     
     @classmethod
-    def copy_particle(cls, particle) -> 'Particle':
+    def copy_particle(cls, particle: 'Particle') -> 'Particle':
         """
         returns a copy of the particle
         @param particle: the particle to copy
         @return a copy of the particle
         """
-        return cls(particle.get_x(), particle.get_y(), particle.get_vector_function(), particle.get_radius(), particle.get_charge(), particle.get_color())
+        return cls(particle.get_vector_function(), particle.get_x(), particle.get_y(), particle.get_radius(), particle.get_charge(), particle.get_color())
 
     def get_new_pos(self, steps=0) -> Point:
         """returns the new position of the particle"""
@@ -45,15 +45,29 @@ class Particle:
         @param particle_coordinates: the coordinates of the other particles in the system
         """
         running = True
+        index = 0
         while running:
             next_vector = self.get_vector_function()()
             next_position = self.get_coordinate().position_after_vector(self.get_coordinate(), next_vector)
+            collides = False
             for particle in system.get_particles():
-                if not next_position.intersects(particle.get_coordinate(), self.get_radius(), particle.get_radius()):
-                    if -system_width//2 <= next_position.get_x() <= system_width//2 and -system_height//2 <= next_position.get_y() <= system_height//2:
-                        self.get_coordinate().set_xy(next_position)
-                        running = False
+                if particle != self:
+                    if -system_width//2 >= next_position.get_x() or next_position.get_x() >= system_width//2:
+                        collides = True
                         break
+                    if next_position.intersects(particle.get_coordinate(), self.get_radius(), particle.get_radius()):
+                        collides = True
+                        break
+            if not collides:
+                self.get_coordinate().set_xy(next_position)
+                running = False
+                break
+            
+            if index >= 100:
+                running = False
+                #print('index over range')
+            
+            index += 1
 
     def get_x(self) -> int:
         """returns the x coordinate of the particle"""

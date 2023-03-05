@@ -1,5 +1,6 @@
 from vector import Vector
 import random
+import math
 
 class Point:
     """
@@ -83,4 +84,6 @@ class Point:
         within the radius of circle with the sum of the radii, and by extension if the original
         circles are intersecting
         """
-        return abs(self.get_x() - point.get_x()) <= radius1+radius2 and abs(self.get_y() - point.get_y()) <= radius1+radius2
+        distance = math.sqrt((self.get_x() - point.get_x())**2 + (self.get_y() - point.get_y())**2)
+        radius_sum = radius1 + radius2
+        return distance < radius_sum
