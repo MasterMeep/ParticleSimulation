@@ -1,6 +1,8 @@
 from point import Point
 from vector import Vector
 import time
+import numpy as np
+from sklearn.neighbors import KDTree
 
 class Particle:
     """
@@ -50,14 +52,32 @@ class Particle:
             next_vector = self.get_vector_function()()
             next_position = self.get_coordinate().position_after_vector(self.get_coordinate(), next_vector)
             collides = False
-            for particle in system.get_particles():
+            """for particle in system.get_particles():
                 if particle != self:
                     if -system_width//2 >= next_position.get_x() or next_position.get_x() >= system_width//2:
                         collides = True
                         break
                     if next_position.intersects(particle.get_coordinate(), self.get_radius(), particle.get_radius()):
                         collides = True
-                        break
+                        break"""
+            if -system_width//2 >= next_position.get_x() or next_position.get_x() >= system_width//2:
+                collides= True
+            else:
+                particle_coordinates = system.get_particle_coordinates_in_2d_list()
+                particle_coordinates_np_array = np.array(particle_coordinates)
+                
+                kdt = KDTree(particle_coordinates_np_array, leaf_size=30, metric='euclidean')
+                
+                indices = kdt.query([[*next_position.get_xy()]], k=self.get_radius()*3, return_distance=False)
+                if len(indices) > 0:
+                    particles = system.get_particles()
+                    for ind in indices[0]:
+                        #print(ind)
+                        particle = particles[ind]
+                        if next_position.intersects(particle.get_coordinate(), self.get_radius(), particle.get_radius()):
+                            collides = True
+                            break
+            
             if not collides:
                 self.get_coordinate().set_xy(next_position)
                 running = False
@@ -80,6 +100,9 @@ class Particle:
     def set_x(self, x: int):
         """sets the x coordinate of the particle"""
         self.get_coordinate().set_x(x)
+        
+    def get_xy(self) -> tuple:
+        return self.coordinate.get_xy()
         
     def set_y(self, y: int):
         """sets the y coordinate of the particle"""

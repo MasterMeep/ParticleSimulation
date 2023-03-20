@@ -25,6 +25,6 @@ def generate_nested_squares(side_length_inner, side_length_outer, particle_inner
 
 def generate_particle_density(particle, density, system):
     system_area = system.get_width()*system.get_height()
-    particle_area = math.pi*particle.get_radius()**2
-    particle_amount = int(system_area/particle_area*density)
+    particle_area = math.pi*(particle.get_radius()**2)
+    particle_amount = int((system_area*density)/particle_area)
     system.add_multiple_duplicate_particles(particle, particle_amount)
