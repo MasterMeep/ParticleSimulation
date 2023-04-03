@@ -1,189 +1,153 @@
-from vector import Vector
-from point import Point
-from particle import Particle
-import matplotlib.pyplot as plt
+import numpy as np
+from random import uniform, randint
+from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
-import time
-from alive_progress import alive_bar
-import math
-import seaborn as sns
-from contextlib import nullcontext
+from math import ceil, sqrt
 
+from Particle import Particle
+from utils import circles_intersect
+from Grid import Grid
 
 class System:
-    """
-    A collection of particles with functions that affect all particles in the system
-    @param width: the width of the system
-    @param height: the height of the system
-    @param gravity: if the system is effected by gravity
-    @param step_size: the amount of steps to step the system by during animation
-    """
-    def __init__(self, width, height, gravity=False, step_size=1, density_range=1):
-        self.particles = []
-        self.width = width
-        self.height = height
-        self.gravity = gravity
-        self.step_size = step_size
-        self.density_range = density_range
-        self.current_step = 0
-        
-    def add_particle(self, particle: Particle):
-        """
-        Adds a particle to the system
-        @param particle: the particle to add to the system
-        """
-        self.particles.append(particle)
+    def __init__(self, side_length):
+        self.side_length = side_length
+        self.unordered_particles = []
+        self.max_radii = 4
+        self.segmented_particle_grid_size = side_length//self.max_radii
+        self.reset_segmented_particle_grid()
+        self.index = 0
 
-    #TODO: make this function more efficient, its horrifically inefficient
-    def add_multiple_duplicate_particles(self, particle, amount, show=False):
-        """
-        Adds multiple particles to the system
-        @param particle: the particle to add to the system
-        @param amount: the amount of particles to add to the system
-        """
-        for _ in range(amount):
-            self.add_particle(Particle.copy_particle(particle))
-        with alive_bar(amount, dual_line=True, title='Initializing Particles') if show else nullcontext() as bar:
-            for iterated_particle in self.get_particles():
-                running = True
-                while running:    
-                    random_point = Point.random_point(self.width, self.height)
-                    for second_iterated_particle in self.get_particles():
-                        if second_iterated_particle != iterated_particle:
-                            if not random_point.intersects(particle.get_coordinate(), iterated_particle.get_radius(), second_iterated_particle.get_radius()):
-                                iterated_particle.get_coordinate().set_xy(random_point)
-                                running = False
-                
-                if (show):
-                    bar()
-        print(' ')
-                
-
-    def step(self, steps=1, show=False):
-        """
-        Steps the system by the amount of steps given
-        @param steps: the amount of steps to step the system by
-        """
-        with alive_bar(steps, dual_line=True, title='Step') if show and steps>1 else nullcontext() as step_bar:
-            with alive_bar(len(self.get_particles()), dual_line=True, title='Stepping') if show and steps == 1 else nullcontext() as particle_bar:
-                for step in range(steps):
-                    for particle in self.particles:
-                        particle.step(self.width, self.height, self)
-                        if particle.get_y() < -self.get_height()//2:
-                            particle.set_y(2*self.get_height()//2+particle.get_y())
-                        if particle.get_y() > self.get_height()//2:
-                            particle.set_y(particle.get_y()-2*self.get_height()//2)
-                        if(show and steps == 1):
-                            particle_bar()
-                        
-                        
-                    if(show and steps  > 1):
-                        step_bar()
+    def add_n_points(self, particle, amount):
+        for i in range(amount):
+            self.unordered_particles.append(Particle.copy(particle))
             
-
-        self.current_step += steps
-    #TODO: split function into basic plt plots instead of this horrible mess of 2 if statements
-    def show_state(self, axs=None, plot=True, show_density=False, animation=False):
-        """display state of system with matplotlib"""
+    def setup_particle_lattice(self):
+        for i, particle in enumerate(self.unordered_particles):
+            amount = len(self.unordered_particles)
+            particle.x = (i % ceil(sqrt(amount))) * self.side_length / ceil(sqrt(amount))
+            particle.y = (i // ceil(sqrt(amount))) * self.side_length / ceil(sqrt(amount))
         
-        if not animation:
-            fig, axs = plt.subplots()
-            if show_density:
-                fig, axs = plt.subplots(3, 1)
-        
-        circles = []
+    def add_particle(self, particle):
+        self.unordered_particles.append(particle)
 
-        
-        circles.clear()
-        density_range = self.density_range
-        density_values = [0 for _ in range(self.get_width()//density_range)]
-        for particle in self.get_particles():
-            index = (int(particle.get_x())+self.get_width()//2)//density_range-1
-            try:
-                density_values[index] += 1
-            except:
-                pass
-            circles.append(plt.Circle((particle.get_x(), particle.get_y()), particle.get_radius(), color=particle.get_color()))
-        if show_density:
-            axs[0].set_title(self.current_step)
-            axs[0].clear()
-            axs[1].clear()
-            axs[2].clear()
-            
-            
-            
-            axs[0].set_xlim([-self.width//2, self.width//2])
-            axs[1].set_xlim([-self.width//2, self.width//2])
-            axs[2].set_xlim([-self.width//2, self.width//2])
-            
-            
-            axs[0].set_ylim([-self.height//2, self.height//2])
-            axs[1].set_ylim([0, self.height])
-            axs[2].set_ylim([-self.height//2, self.height//2])
-            
-            
-            for circle in circles:
-                axs[0].add_artist(circle)
-            axs[1].plot(range(-self.get_width()//2, self.get_width()//2, density_range), density_values)
-            #sns.kdeplot(x_coordinates, y_coordinates, ax=axs[2], fill=True, shade_lowest=False, cmap="mako")
-            
-            
-        else:
-            axs.set_title(self.current_step)
-            axs.clear()
-            for circle in circles:
-                axs.add_artist(circle)
-            axs.set_xlim([-self.width//2, self.width//2])
-            axs.set_ylim([-self.height//2, self.height//2])
-            
-        if plot:
+    def show(self, show=True):
+        for point in self.unordered_particles:
+            circle = plt.Circle((point.x, point.y), point.radius, color=point.color, fill=False)
+            plt.gca().add_patch(circle)
+
+        plt.axis('scaled')
+        if show:    
             plt.show()
-        
 
-        
-    def animate_plots(self, show_density=False, show_step_states=False, show_individually=False):
-        if show_density:
-            fig, axs = plt.subplots(3,1)
-        else:
-            fig, axs = plt.subplots()
-        self.step(show=show_step_states)
-        def animate_system(frame):
-            self.step(self.step_size, show=show_step_states)
-            self.show_state(axs, plot = False, show_density=show_density, animation=True)
-            if show_density:
-                axs[0].set_title("Step: " + str(self.current_step))
-            else:
-                axs.set_title("Step: " + str(self.current_step))
-        animation = FuncAnimation(fig, animate_system, interval=100)
+    def animate(self, step_size, step_amount_per_frame):
+        fig, ax = plt.subplots()
+        def animation(frame):
+            for i in range(step_amount_per_frame):
+                self.segmented_step(step_size)
+            ax.clear()
+            self.show(show=False)
+            plt.title(self.index)
+            self.index += step_amount_per_frame
+        animation_variable = FuncAnimation(fig, animation, frames=100)
         plt.show()
 
+    def naive_check(self, point):
+        for iteratedPoint in self.unordered_particles:
+            if iteratedPoint != point:
+                if circles_intersect(*iteratedPoint.get_xyr(), *point.get_xyr()):
+                    return False
 
-    def get_particle_coordinate_list(self) -> list:
-        """
-        Returns a list of the coordinates of all the particles in the system
-        @return: a list of the coordinates of all the particles in the system
-        """
-        coordinates = []
-        for particle in self.particles:
-            coordinates.append(particle.get_coordinate())
-            
-        return coordinates
+        return True
     
-    #TODO: make this is an ordered list
-    def get_particle_coordinates_in_2d_list(self) -> list:
-        particle_coordinates_2d = []
-        for particle in self.get_particles():
-            particle_coordinates_2d.append([*particle.get_coordinate().get_xy()])
-            
-        return particle_coordinates_2d
+    def naive_benchmark(self):
+        for particle in self.unordered_particles:
+            self.naive_check(particle)
         
-    def get_particles(self):
-        return self.particles
+    def reset_segmented_particle_grid(self):
+        self.segmented_particle_grid = np.zeros((self.segmented_particle_grid_size, self.segmented_particle_grid_size), object)
+        for x in range(self.segmented_particle_grid_size):
+            for y in range(self.segmented_particle_grid_size):
+                self.segmented_particle_grid[y, x] = Grid()
+                
+    def get_segmented_coordinate(self, particle):
+        return int(particle.x//self.max_radii), int(particle.y//self.max_radii)
     
-    def get_width(self) -> int:
-        """return the width of system"""
-        return self.width
+    def add_particle_to_segmented_particle_grid(self, particle):
+        x, y = self.get_segmented_coordinate(particle)
+        self.segmented_particle_grid[y, x].add_particle(particle)
+        
+    def get_particles_from_segmented_particle_grid(self, x, y):
+        segmented_x, segmented_y = self.get_segmented_coordinate(Particle(x=x, y=y))
+        return self.segmented_particle_grid[segmented_y, segmented_x].particles
     
-    def get_height(self) -> int:
-        """return the height of system"""
-        return self.height
+    def get_grid_slice_from_segmented_grid(self, center, width):
+        x,y = center
+        particles = []
+        for x_slice in range(max(x-self.max_radii, 0), min(x+self.max_radii+1, self.side_length), self.max_radii):
+            for y_slice in range(max(y-self.max_radii, 0), min(y+self.max_radii+1, self.side_length), self.max_radii):
+                particles.extend(self.get_particles_from_segmented_particle_grid(x_slice, y_slice))
+                
+        return particles
+    
+    def segmented_check_particle(self, particle, slice_width=1):
+        for iteratedParticle in self.get_grid_slice_from_segmented_grid((int(particle.x), int(particle.y)), slice_width):
+            if iteratedParticle != 0 and iteratedParticle != particle:
+                if circles_intersect(*particle.get_xyr(), *iteratedParticle.get_xyr()):
+                    return False
+        return True
+    
+    def load_all_particles_to_segmented_grid(self):
+        for particle in self.unordered_particles:
+            self.add_particle_to_segmented_particle_grid(particle)
+            
+    def update_particle_position_in_segmented_grid(self, particle, original_x, original_y):
+        x, y = self.get_segmented_coordinate(Particle(x=original_x, y=original_y))
+        self.segmented_particle_grid[y, x].remove(particle)
+        self.add_particle_to_segmented_particle_grid(particle)
+    
+    def segmented_benchmark(self):
+        self.reset_segmented_particle_grid()
+        for particle in self.unordered_particles:
+            if not self.segmented_check_particle(particle):
+                print('failed')
+            self.add_particle_to_segmented_particle_grid(particle)
+                
+                
+    def naive_randomize(self):
+        for particle in self.unordered_particles:
+            running = True
+            index = 0
+            while running:
+                particle.x = uniform(0, self.side_length)
+                particle.y = uniform(0, self.side_length)
+                if self.naive_check(particle) or index > 100:
+                    running = False
+                    
+                index += 1
+                    
+    def segmented_randomize(self):
+        self.reset_segmented_particle_grid()
+        for particle in self.unordered_particles:
+            running = True
+            index = 0
+            while running:
+                particle.x = uniform(0, self.side_length)
+                particle.y = uniform(0, self.side_length)
+                if self.segmented_check_particle(particle) or index > 100:
+                    self.add_particle_to_segmented_particle_grid(particle)
+                    running = False
+                    
+                index += 1
+
+    def segmented_step(self, step_width):
+        for particle in self.unordered_particles:
+            original_x = particle.x
+            original_y = particle.y
+            particle.x += uniform(-step_width, step_width)
+            particle.y += uniform(-step_width, step_width)
+            particle.x = max(1, min(particle.x, self.side_length-1))
+            if not self.segmented_check_particle(particle) or particle.x < 0.0 or particle.x > self.side_length or particle.y < 0.0 or particle.y > self.side_length:
+                particle.x = original_x
+                particle.y = original_y
+
+            self.update_particle_position_in_segmented_grid(particle, original_x, original_y)
